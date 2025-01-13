@@ -1,0 +1,6 @@
+[
+  {
+    "name": "demo-apps2",
+    "imageUri": "public.ecr.aws/p2g3u3g4/thm:latest"
+  },
+]
