@@ -31,7 +31,6 @@ phases:
       - cat imagedefinitions.json
 
       - echo "Configuring kubectl to interact with EKS..."
-      - aws eks update-kubeconfig
       - aws eks --region us-east-1 update-kubeconfig --name test-themeleaf  # Update with your EKS cluster name
       - echo "Deploying application to EKS..."
       - kubectl apply -f kubernetes/deployment.yaml  # Path to your Kubernetes deployment file
