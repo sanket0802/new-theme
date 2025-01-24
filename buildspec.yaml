@@ -5,26 +5,20 @@ phases:
       - echo "Logging in to Amazon ECR..."
       - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/p2g3u3g4
       - REPOSITORY_URI=public.ecr.aws/p2g3u3g4/leaf
-      - IMAGE_TAG=latest #build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+      - IMAGE_TAG=latest 
 
   build:
     commands:
-      - echo "Logging in to Amazon ECR..."
-      - ls
+      - echo "Checking for appspec.yaml..."
+      - ls -l  # List all files in current directory
       - echo "Building Maven project..."
       - cd thymeleafExample
       - mvn clean install -DskipTests=true
-      - echo "building docker image...."
+      - echo "Building Docker image...."
       - cd ..
       - pwd
       - docker build -t leaf .
       - docker tag leaf:latest public.ecr.aws/p2g3u3g4/leaf:latest
-      - echo "Update AWS CLI"
-      - pip3 uninstall -y awscli
-      - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      - unzip awscliv2.zip
-      - sudo ./aws/install --update
-      - export PATH=$PATH:/usr/local/bin
 
   post_build:
     commands: 
@@ -33,9 +27,6 @@ phases:
       - >
         for dockerfile in Dockerfile ; do
           container=$(basename $dockerfile .Dockerfile)
-          
-          # Remove "dockerfile." prefix and convert to lowercase
-          container=$(echo "$container" | sed -E 's/^(dockerfile|Dockerfile)\.//; s/[A-Z]/\L&/g')
           echo $container
 
           echo "Building Docker image for $container using $dockerfile..."
@@ -54,6 +45,9 @@ artifacts:
   files:
     - imagedefinitions.json
     - target/work-0.0.1-SNAPSHOT.jar
+    - appspec.yaml  # Ensure this is included
+
+
 
 
 
