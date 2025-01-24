@@ -30,9 +30,10 @@ phases:
       - mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
       - echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
       - kubectl version --client
+
   post_build:
     commands: 
-     - echo "Build completed on $(date)"
+      - echo "Build completed on $(date)"
       - echo "[]" > imagedefinitions.json
       - >
         for dockerfile in Dockerfile ; do
@@ -44,11 +45,11 @@ phases:
 
           echo "Building Docker image for $container using $dockerfile..."
           docker build -t $container -f $dockerfile .
-	  docker tag $container:latest public.ecr.aws/p2g3u3g4/$container:latest
-	  docker push public.ecr.aws/p2g3u3g4/$container:latest
+          docker tag $container:latest public.ecr.aws/p2g3u3g4/$container:latest
+          docker push public.ecr.aws/p2g3u3g4/$container:latest
 
           echo "Adding entry for $container to imagedefinitions.json..."
-          entry=$(printf '{"name":"%s","imageUri":"%s"}' $container $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$container:latest)
+          entry=$(printf '{"name":"%s","imageUri":"%s"}' $container public.ecr.aws/p2g3u3g4/$container:latest)
           jq ". += [$entry]" imagedefinitions.json > tmp.json && mv tmp.json imagedefinitions.json
         done
 
@@ -58,6 +59,7 @@ artifacts:
   files:
     - imagedefinitions.json
     - target/work-0.0.1-SNAPSHOT.jar
+
 
 
 
