@@ -32,15 +32,89 @@ phases:
       - kubectl version --client
   post_build:
     commands: 
-      - echo Build completed on `date`
-      - echo pushing to repo
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Writing image definitions file...
-      - DOCKER_CONTAINER_NAME=sample-api
-      - printf '[{"name":"%s","imageUri":"%s"}]' $DOCKER_CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-      - echo $DOCKER_CONTAINER_NAME
-      - echo printing imagedefinitions.json
-      - cat imagedefinitions.json
+     - echo "Build completed on $(date)"
+      - echo "[]" > imagedefinitions.json
+      - >
+        for dockerfile in Dockerfile ; do
+          container=$(basename $dockerfile .Dockerfile)
+          
+          # Remove "dockerfile." prefix and convert to lowercase
+          container=$(echo "$container" | sed -E 's/^(dockerfile|Dockerfile)\.//; s/[A-Z]/\L&/g')
+          echo $container
+
+          echo "Building Docker image for $container using $dockerfile..."
+          docker build -t $container -f $dockerfile .
+		  docker tag $container:latest public.ecr.aws/p2g3u3g4/$container:latest
+		  docker push public.ecr.aws/p2g3u3g4/$container:latest
+
+          echo "Adding entry for $container to imagedefinitions.json..."
+          entry=$(printf '{"name":"%s","imageUri":"%s"}' $container $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$container:latest)
+          jq ". += [$entry]" imagedefinitions.json > tmp.json && mv tmp.json imagedefinitions.json
+        done
+
+        cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - target/work-0.0.1-SNAPSHOT.jar
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#version: 0.2
+#phases:
+#  pre_build:
+#    commands:
+#      - echo "Logging in to Amazon ECR..."
+#      - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/p2g3u3g4
+#      - REPOSITORY_URI=public.ecr.aws/p2g3u3g4/leaf
+#      - IMAGE_TAG=latest #build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+#
+ # build:
+#    commands:
+ #     - echo "Logging in to Amazon ECR..."
+  #    - ls
+   ##   - echo "Building Maven project..."
+     # - cd thymeleafExample
+    #  - mvn clean install -DskipTests=true
+    #  - echo "building docker image...."
+     # - cd ..
+     # - pwd
+   #   - docker build -t leaf .
+    #  - docker tag leaf:latest public.ecr.aws/p2g3u3g4/leaf:latest
+   #   - echo "Update AWS CLI"
+ #     - pip3 uninstall -y awscli
+ #     - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+ #     - unzip awscliv2.zip
+ #     - sudo ./aws/install --update
+#      - export PATH=$PATH:/usr/local/bin
+#      - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/kubectl
+ #     - chmod +x ./kubectl
+#      - mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+#      - echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+#      - kubectl version --client
+#  post_build:
+#    commands: 
+#      - echo Build completed on `date`
+#      - echo pushing to repo
+ #     - docker push $REPOSITORY_URI:$IMAGE_TAG
+#      - echo Writing image definitions file...
+#      - DOCKER_CONTAINER_NAME=sample-api
+ #    - printf '[{"name":"%s","imageUri":"%s"}]' $DOCKER_CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+ #     - echo $DOCKER_CONTAINER_NAME
+  #    - echo printing imagedefinitions.json
+ #     - cat imagedefinitions.json
 
       #- echo "Configuring kubectl to interact with EKS..."
       #- aws eks --region us-east-1 update-kubeconfig --name test-themeleaf  # Update with your EKS cluster name
@@ -48,10 +122,10 @@ phases:
       #- kubectl apply -f kubernetes/deployment.yaml  # Path to your Kubernetes deployment file
       #- kubectl apply -f kubernetes/service.yaml     # Path to your Kubernetes service file
       #- echo "Deployment completed to EKS!"
-artifacts:
-  files:
-    - imagedefinitions.json
-    - target/work-0.0.1-SNAPSHOT.jar
+#artifacts:
+ # files:
+ #   - imagedefinitions.json
+ #   - target/work-0.0.1-SNAPSHOT.jar
 
 
 
