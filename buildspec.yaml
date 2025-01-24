@@ -44,8 +44,8 @@ phases:
 
           echo "Building Docker image for $container using $dockerfile..."
           docker build -t $container -f $dockerfile .
-		  docker tag $container:latest public.ecr.aws/p2g3u3g4/$container:latest
-		  docker push public.ecr.aws/p2g3u3g4/$container:latest
+	  docker tag $container:latest public.ecr.aws/p2g3u3g4/$container:latest
+	  docker push public.ecr.aws/p2g3u3g4/$container:latest
 
           echo "Adding entry for $container to imagedefinitions.json..."
           entry=$(printf '{"name":"%s","imageUri":"%s"}' $container $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$container:latest)
