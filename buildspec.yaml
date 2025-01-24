@@ -35,7 +35,7 @@ phases:
           docker push public.ecr.aws/p2g3u3g4/leaf:latest
 
           echo "Adding entry for $container to imagedefinitions.json..."
-          entry=$(printf '{"name":"%s","imageUri":"%s"}' $container public.ecr.aws/p2g3u3g4/$container:latest)
+          entry=$(printf '{"name":"%s","imageUri":"%s"}' $container public.ecr.aws/p2g3u3g4/leaf:latest)
           jq ". += [$entry]" imagedefinitions.json > tmp.json && mv tmp.json imagedefinitions.json
         done
 
